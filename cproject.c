@@ -31,15 +31,15 @@ int main(){
 void GetInput(){
     char key;
     if (_kbhit() != 0){
-        key = getchar();
-        if (key == 'a' || key == 'A'){
+        key = _getch();
+        if (key == 75){
             for (int i = 0; i < HEIGHT; i++)
             for (int j = 1; j < WIDTH; j++)
                 if (save[i][j] == -1){
                     save[i][j - 1] = save[i][j];
                     save[i][j] = 0;
                 }
-        } else if (key == 'd' || key == 'D'){
+        } else if (key == 77){
             for (int i = 0; i < HEIGHT; i++)
             for (int j = 0; j < WIDTH - 1; j++)
             if (save[i][j] == -1){
