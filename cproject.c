@@ -24,6 +24,8 @@ int main(){
         SummonBlock();
         GetInput();
         MoveSand();
+		CheckCollision();
+		DestroySand();
         Draw();
     }
     return 0;
