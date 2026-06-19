@@ -77,7 +77,12 @@ void Draw(){
                 pos.X = j;
                 pos.Y = i;
                 SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), pos);
-                printf("%c", save[i][j] == 0 ? 'X' : 'O');
+                if(save[i][j] == '0') 
+            		printf(" ");
+            	else
+            		printf("ㅁ");
+                //printf("%s", save[i][j] == 0 ? " " : "■");
+                //printf("%d", save[i][j]);
                 lastSave[i][j] = save[i][j];
             }
             // Sleep(100);
@@ -117,7 +122,12 @@ void Setup(){
             pos.X = j;
             pos.Y = i;
             SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), pos);
-            printf("%c", save[i][j] == 0?'X':'O');
+            if(save[i][j] == '0') 
+            	printf(" ");
+            else
+            	printf("ㅁ");
+            //printf("%s", save[i][j] == 0?" ":"ㅁ");
+            //printf("%d", save[i][j]);
         }
         COORD pos;
         pos.X = WIDTH;
@@ -127,7 +137,7 @@ void Setup(){
     }
 }
 
-void SummonBlock(){
+void SummonBlock(){ // 0: 빈 공간 1: 조작할 수 없는 픽셀 // -1조작 가능한 픽셀  
     save[0][WIDTH/2] = 1;
 }
 
