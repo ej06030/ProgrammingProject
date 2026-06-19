@@ -10,6 +10,7 @@ void SummonBlock();
 void MoveSand();
 void Draw();
 void DestroySand();
+void CheckCollision();
 
 
 int save[HEIGHT][WIDTH];
@@ -198,6 +199,41 @@ void DestorySand(){
 				visited[cx][cy]=0;
 				queue[qsize++]=cx*HEIGHT+cy;
 			}
+		}
+	}
+}
+
+void CheckCollision(){
+	int visited[HEIGHT][WIDTH]={0,};
+	for(int i=0;i<HEIGHT;++i){
+		for(int j=0;j<WIDTH;++j){
+			visited[i][j]=1;
+			if(save[i][j]>=0) continue;
+			int queue[HEIGHT*WIDTH]={0,},qsize=1,yescollision=0;
+			queue[0]=i*HEIGHT+j;
+			for(int k=0;k<qsize;++k){
+				yescollision=yescollision|(queue[k]/HEIGHT==HEIGHT-1);
+				for(int v=0;v<4;++v){
+					int cx=queue[k]/HEIGHT+"1210"[v]-'1', cy=queue[k]%HEIGHT+"0121"[v]-'1';
+					if(cx<0||cy<0||cx>=HEIGHT||cy>=WIDTH) continue;
+					if(cx-1==queue[i]/HEIGHT&&save[cx][cy]>0) yescollision=1;
+					if(save[cx][cy]!=save[i][j]||visited[cx][cy]) continue;
+					visited[cx][cy]=1;
+					queue[qsize++]=cx*HEIGHT+cy;
+				}
+			}if(!yescollision) return;
+			qsize=1;
+			queue[0]=i*HEIGHT+j;
+			save[i][j]=-save[i][j];
+			for(int k=0;k<qsize;++k){
+				for(int v=0;v<4;++v){
+					int cx=queue[k]/HEIGHT+"1210"[v]-'1', cy=queue[k]%HEIGHT+"0121"[v]-'1';
+					if(cx<0||cy<0||cx>=HEIGHT||cy>=WIDTH||save[cx][cy]!=save[i][j]) continue;
+					save[cx][cy]=-save[cx][cy];
+					queue[qsize++]=cx*HEIGHT+cy;
+				}
+			}SummonBlock();
+			return;
 		}
 	}
 }
