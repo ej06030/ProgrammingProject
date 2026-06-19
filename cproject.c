@@ -9,6 +9,7 @@ void Setup();
 void SummonBlock();
 void MoveSand();
 void Draw();
+void DestroySand();
 
 
 int save[HEIGHT][WIDTH];
@@ -80,8 +81,8 @@ void Draw(){
                 if(save[i][j] == '0') 
             		printf(" ");
             	else
-            		printf("¤±");
-                //printf("%s", save[i][j] == 0 ? " " : "¡á");
+            		printf("ã…");
+                //printf("%s", save[i][j] == 0 ? " " : "â– ");
                 //printf("%d", save[i][j]);
                 lastSave[i][j] = save[i][j];
             }
@@ -125,8 +126,8 @@ void Setup(){
             if(save[i][j] == '0') 
             	printf(" ");
             else
-            	printf("¤±");
-            //printf("%s", save[i][j] == 0?" ":"¤±");
+            	printf("ã…");
+            //printf("%s", save[i][j] == 0?" ":"ã…");
             //printf("%d", save[i][j]);
         }
         COORD pos;
@@ -137,7 +138,7 @@ void Setup(){
     }
 }
 
-void SummonBlock(){ // 0: ºó °ø°£ 1: Á¶ÀÛÇÒ ¼ö ¾ø´Â ÇÈ¼¿ // -1Á¶ÀÛ °¡´ÉÇÑ ÇÈ¼¿  
+void SummonBlock(){ // 0: ë¹ˆ ê³µê°„ 1: ì¡°ì‘í•  ìˆ˜ ì—†ëŠ” í”½ì…€ // -1ì¡°ì‘ ê°€ëŠ¥í•œ í”½ì…€  
     save[0][WIDTH/2] = 1;
 }
 
@@ -165,4 +166,38 @@ void MoveSand(){
     }
 }
 
-
+void DestorySand(){
+	int visited[HEIGHT][WIDTH]={0,};
+	for(int l=0;l<HEIGHT;++l){
+		if(visited[l][0]||save[l][0]<1) continue;
+		int queue[HEIGHT*WIDTH]={0,},qsize=1,yesclear=0;
+		queue[0]=l*HEIGHT;
+		visited[l][0]=l+1;
+		// look for same color mong-tang-ee
+		for(int i=0;i<qsize;++i){
+			yesclear=((queue[i]+1)%WIDTH<1)|yesclear;
+			for(int j=0;j<4;++j){
+				int cx=queue[i]/HEIGHT+"1210"[j]-'1', cy=queue[i]%HEIGHT+"0121"[j]-'1';
+				if(cx<0||cy<0||cx>=HEIGHT||cy>=WIDTH||visited[cx][cy]||save[l][0]!=save[cx][cy]) continue;
+				visited[cx][cy]=l+1;
+				queue[qsize++]=cx*HEIGHT+cy;
+			}
+		}
+		// check if the line is erasable
+		if(!yesclear) continue;
+		// destroy sand
+		qsize=1;
+		queue[0]=l*HEIGHT;
+		visited[l][0]=0;
+		for(int i=0;i<qsize;++i){
+			// insert Score UP function here
+			save[queue[i]/HEIGHT][queue[i]%HEIGHT]=0;
+			for(int j=0;j<4;++j){
+				int cx=queue[i]/HEIGHT+"1210"[j]-'1', cy=queue[i]%HEIGHT+"0121"[j]-'1';
+				if(cx<0||cy<0||cx>=HEIGHT||cy>=WIDTH||visited[cx][cy]!=l+1) continue;
+				visited[cx][cy]=0;
+				queue[qsize++]=cx*HEIGHT+cy;
+			}
+		}
+	}
+}
