@@ -11,6 +11,8 @@ void MoveSand();
 void Draw();
 void DestroySand();
 void CheckCollision();
+void Summon(char[][4][4], int);
+void Rotate();
 
 
 int save[HEIGHT][WIDTH];
@@ -18,17 +20,140 @@ int lastSave[HEIGHT][WIDTH];
 char w[HEIGHT*(WIDTH + 1)];
 
 
+char IBlock[2][4][4] =
+{{{0, 0, 1, 0},
+ {0, 0, 1, 0},
+ {0, 0, 1, 0},
+ {0, 0, 1, 0}},
+
+ {{0, 0, 0, 0},
+ {1, 1, 1, 1},
+ {0, 0, 0, 0},
+ {0, 0, 0, 0}}};
+
+char OBlock[1][4][4] =
+{{{0, 0, 0, 0},
+ {0, 1, 1, 0},
+ {0, 1, 1, 0},
+ {0, 0, 0, 0}}};
+
+
+char TBlock[4][4][4] =
+{{{0, 0, 0, 0},
+ {0, 1, 1, 1},
+ {0, 0, 1, 0},
+ {0, 0, 0, 0}},
+ {{0, 0, 1, 0},
+ {0, 0, 1, 1},
+ {0, 0, 1, 0},
+ {0, 0, 0, 0}},
+ {{0, 0, 1, 0},
+ {0, 1, 1, 1},
+ {0, 0, 0, 0},
+ {0, 0, 0, 0}},
+ {{0, 0, 1, 0},
+ {0, 1, 1, 0},
+ {0, 0, 1, 0},
+ {0, 0, 0, 0}}};
+
+
+char SBlock[2][4][4] =
+{{{0, 0, 0, 0},
+ {0, 0, 1, 1},
+ {0, 1, 1, 0},
+ {0, 0, 0, 0}},
+ {{0, 0, 1, 0},
+ {0, 0, 1, 1},
+ {0, 0, 0, 1},
+ {0, 0, 0, 0}}};
+
+
+char ZBlock[2][4][4] =
+{{{0, 0, 0, 0},
+ {0, 1, 1, 0},
+ {0, 0, 1, 1},
+ {0, 0, 0, 0}},
+ {{0, 0, 0, 1},
+ {0, 0, 1, 1},
+ {0, 0, 1, 0},
+ {0, 0, 0, 0}}};
+
+ 
+char LBlock[4][4][4] =
+{{{0, 0, 0, 0},
+ {0, 1, 1, 1},
+ {0, 1, 0, 0},
+ {0, 0, 0, 0}},
+ {{0, 0, 1, 0},
+ {0, 0, 1, 0},
+ {0, 0, 1, 1},
+ {0, 0, 0, 0}},
+ {{0, 0, 0, 1},
+ {0, 1, 1, 1},
+ {0, 0, 0, 0},
+ {0, 0, 0, 0}},
+ {{0, 1, 1, 0},
+ {0, 0, 1, 0},
+ {0, 0, 1, 0},
+ {0, 0, 0, 0}}};
+
+char JBlock[4][4][4] =
+{{{0, 0, 0, 0},
+ {0, 1, 1, 1},
+ {0, 0, 0, 1},
+ {0, 0, 0, 0}},
+ {{0, 0, 1, 1},
+ {0, 0, 1, 0},
+ {0, 0, 1, 0},
+ {0, 0, 0, 0}},
+ {{0, 1, 0, 0},
+ {0, 1, 1, 1},
+ {0, 0, 0, 0},
+ {0, 0, 0, 0}},
+ {{0, 0, 1, 0},
+ {0, 0, 1, 0},
+ {0, 1, 1, 0},
+ {0, 0, 0, 0}}};
+
+char (*currentBlock)[4][4];
+int rotateNum;
+int totRotateNum;
+int currentBlockColor;
+int blockIdx[2] = {WIDTH / 2 - 18, 0};
+
+int fallCounter = 0;
+int fallCounterOffset = 2;
+int fastFall = 0;
+
+int ended = 0;
+
 int main(){
     Setup();
-    while (1){
-        SummonBlock();
+    SummonBlock();
+    while (!ended){
+        fastFall = 0;
+        // SummonBlock();
+        if (fallCounter == 0){
+            fallCounter = 2;
+            MoveSand();
+        }
         GetInput();
-        MoveSand();
 		CheckCollision();
+        if (ended) break;
 		DestroySand();
         Draw();
+        if (!fastFall) Sleep(10);
+        else fallCounter = 1;
+        fallCounter --;
     }
-    return 0;
+    while (1){
+        if (_kbhit() != 0){
+            char key = _getch();
+            if (key == 32) return 0;
+        }
+
+    }
+    // return 0;
 }
 
 
@@ -36,44 +161,46 @@ void GetInput(){
     char key;
     if (_kbhit() != 0){
         key = _getch();
+        int flag = 1;
         if (key == 75){
             for (int i = 0; i < HEIGHT; i++)
-            for (int j = 1; j < WIDTH; j++)
-                if (save[i][j] == -1){
+            if (save[i][0] < 0){
+                flag = 0;
+                break;
+            }
+            if (flag){
+                for (int i = 0; i < HEIGHT; i++)
+                for (int j = 1; j < WIDTH; j++)
+                if (save[i][j] < 0 && save[i][j - 1] == 0){
                     save[i][j - 1] = save[i][j];
                     save[i][j] = 0;
                 }
+                blockIdx[0] --;
+            }
+            
         } else if (key == 77){
             for (int i = 0; i < HEIGHT; i++)
-            for (int j = 0; j < WIDTH - 1; j++)
-            if (save[i][j] == -1){
-                save[i][j + 1] = save[i][j];
-                save[i][j] = 0;
+            if (save[i][WIDTH - 1] < 0){
+                flag = 0;
+                break;
+            }
+            if (flag){
+                for (int i = 0; i < HEIGHT; i++)
+                for (int j = WIDTH - 2; j >= 0; j--)
+                if (save[i][j] < 0 && save[i][j + 1] == 0){
+                    save[i][j + 1] = save[i][j];
+                    save[i][j] = 0;
+                }
+                blockIdx[0] ++;
             }
         }
+        else if (key == 32) Rotate();
+        else if (key == 80) fastFall = 1;
     }
 }
 
 
 void Draw(){
-    // system("clear");
-    // for (int i = 0; i < HEIGHT; i++){
-    //     for (int j = 0; j < WIDTH; j++){
-    //         system("cls");
-    //     }
-    //     system("cls");
-    // }
-
-
-    // system("cls");
-    // // COORD pos = {0, 0};
-    // // SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), pos);
-    // // printf("\0");
-    // for (int i = 0; i < HEIGHT * (WIDTH + 1); i++){
-    //     w[i] = i % (WIDTH + 1) == WIDTH ? '\n' : save[i / (WIDTH + 1)][i % (WIDTH + 1)] == 0 ? 'X' : 'O';
-    // }
-    // printf("%s", w);
-
     for (int i = 0; i < HEIGHT; i++){
         for (int j = 0; j < WIDTH; j++){
             if (lastSave[i][j] != save[i][j]){
@@ -81,38 +208,35 @@ void Draw(){
                 pos.X = j;
                 pos.Y = i;
                 SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), pos);
-                if(save[i][j] == '0') 
+                // 12, 9, 10, 14
+                switch (save[i][j]){
+                    case 1:
+                    case -1:
+                        SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 12);
+                        break;
+                    case -2:
+                    case 2:
+                        SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 9);
+                        break;
+                    case -3:
+                    case 3:
+                        SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 10);
+                        break;
+                    case -4:
+                    case 4:
+                        SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 14);
+                        break;
+                }
+                if(save[i][j] == 0) 
             		printf(" ");
             	else
-            		printf("ㅁ");
+            		printf("O");
                 //printf("%s", save[i][j] == 0 ? " " : "■");
                 //printf("%d", save[i][j]);
                 lastSave[i][j] = save[i][j];
             }
-            // Sleep(100);
         }
     }
-    // for (int i = 0; i < HEIGHT * WIDTH; i++){
-    //     if (lastSave[i / WIDTH][i % WIDTH] != save[i / WIDTH][i % WIDTH]){
-    //         COORD pos = {i / WIDTH, i % WIDTH};
-    //         SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), pos);
-    //         printf("\b");
-    //         printf("%c", save[i / WIDTH][i % WIDTH] == 1 ? 'O' : 'X');
-    //     }
-
-    // }
-    // printf("%s", w);
-
-
-    // for (int i = 0; i < HEIGHT; i++){
-    //     for (int j = 0; j < WIDTH; j++){
-    //         COORD pos = {0, 0};
-    //         SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), pos);
-    //         printf("\b");
-    //         printf("%c", save[i][j]==1?'O':'X');
-    //     }
-    //     printf("\n");
-    // }
 }
 
 
@@ -126,10 +250,10 @@ void Setup(){
             pos.X = j;
             pos.Y = i;
             SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), pos);
-            if(save[i][j] == '0') 
+            if(save[i][j] == 0) 
             	printf(" ");
             else
-            	printf("ㅁ");
+            	printf("O");
             //printf("%s", save[i][j] == 0?" ":"ㅁ");
             //printf("%d", save[i][j]);
         }
@@ -141,9 +265,9 @@ void Setup(){
     }
 }
 
-void SummonBlock(){ // 0: 빈 공간 1: 조작할 수 없는 픽셀 // -1조작 가능한 픽셀  
-    save[0][WIDTH/2] = 1;
-}
+// void SummonBlock(){ // 0: 빈 공간 1: 조작할 수 없는 픽셀 // -1조작 가능한 픽셀  
+//     save[0][WIDTH/2] = -1;
+// }
 
 void MoveSand(){
     for (int i = HEIGHT - 2; i >= 0; i--){
@@ -153,7 +277,6 @@ void MoveSand(){
                     save[i + 1][j] = save[i][j];
                     save[i][j] = 0;
                 }else{
-                    save[i][j] = -1;
                     if(j > 0 && save[i + 1][j - 1] == 0){
                         save[i + 1][j - 1] = save[i][j];
                         save[i][j] = 0;
@@ -162,80 +285,216 @@ void MoveSand(){
                         save[i][j] = 0;
                     }
                 }
-
             }
-
+        }
+        for (int j = WIDTH - 1; j >= 0; j --){
+            if (save[i][j] != 0 && save[i + 1][j] != 0){
+                if (j < WIDTH - 1 && save[i + 1][j + 1] == 0){
+                    save[i + 1][j + 1] = save[i][j];
+                    save[i][j] = 0;
+                } else if (j > 0 && save[i + 1][j - 1] == 0){
+                    save[i + 1][j - 1] = save[i][j];
+                    save[i][j] = 0;
+                }
+            }
         }
     }
+    blockIdx[1] += 1;
 }
 
-void DestorySand(){
+void DestroySand(){
 	int visited[HEIGHT][WIDTH]={0,};
 	for(int l=0;l<HEIGHT;++l){
 		if(visited[l][0]||save[l][0]<1) continue;
 		int queue[HEIGHT*WIDTH]={0,},qsize=1,yesclear=0;
-		queue[0]=l*HEIGHT;
+		queue[0]=l*WIDTH;
 		visited[l][0]=l+1;
 		// look for same color mong-tang-ee
 		for(int i=0;i<qsize;++i){
 			yesclear=((queue[i]+1)%WIDTH<1)|yesclear;
 			for(int j=0;j<4;++j){
-				int cx=queue[i]/HEIGHT+"1210"[j]-'1', cy=queue[i]%HEIGHT+"0121"[j]-'1';
+				int cx=queue[i]/WIDTH+"1210"[j]-'1', cy=queue[i]%WIDTH+"0121"[j]-'1';
 				if(cx<0||cy<0||cx>=HEIGHT||cy>=WIDTH||visited[cx][cy]||save[l][0]!=save[cx][cy]) continue;
 				visited[cx][cy]=l+1;
-				queue[qsize++]=cx*HEIGHT+cy;
+				queue[qsize++]=cx*WIDTH+cy;
 			}
 		}
 		// check if the line is erasable
 		if(!yesclear) continue;
 		// destroy sand
 		qsize=1;
-		queue[0]=l*HEIGHT;
+		queue[0]=l*WIDTH;
 		visited[l][0]=0;
 		for(int i=0;i<qsize;++i){
 			// insert Score UP function here
-			save[queue[i]/HEIGHT][queue[i]%HEIGHT]=0;
+			save[queue[i]/WIDTH][queue[i]%WIDTH]=0;
 			for(int j=0;j<4;++j){
-				int cx=queue[i]/HEIGHT+"1210"[j]-'1', cy=queue[i]%HEIGHT+"0121"[j]-'1';
+				int cx=queue[i]/WIDTH+"1210"[j]-'1', cy=queue[i]%WIDTH+"0121"[j]-'1';
 				if(cx<0||cy<0||cx>=HEIGHT||cy>=WIDTH||visited[cx][cy]!=l+1) continue;
 				visited[cx][cy]=0;
-				queue[qsize++]=cx*HEIGHT+cy;
+				queue[qsize++]=cx*WIDTH+cy;
 			}
 		}
 	}
 }
 
 void CheckCollision(){
-	int visited[HEIGHT][WIDTH]={0,};
-	for(int i=0;i<HEIGHT;++i){
-		for(int j=0;j<WIDTH;++j){
-			visited[i][j]=1;
-			if(save[i][j]>=0) continue;
-			int queue[HEIGHT*WIDTH]={0,},qsize=1,yescollision=0;
-			queue[0]=i*HEIGHT+j;
-			for(int k=0;k<qsize;++k){
-				yescollision=yescollision|(queue[k]/HEIGHT==HEIGHT-1);
-				for(int v=0;v<4;++v){
-					int cx=queue[k]/HEIGHT+"1210"[v]-'1', cy=queue[k]%HEIGHT+"0121"[v]-'1';
-					if(cx<0||cy<0||cx>=HEIGHT||cy>=WIDTH) continue;
-					if(cx-1==queue[i]/HEIGHT&&save[cx][cy]>0) yescollision=1;
-					if(save[cx][cy]!=save[i][j]||visited[cx][cy]) continue;
-					visited[cx][cy]=1;
-					queue[qsize++]=cx*HEIGHT+cy;
-				}
-			}if(!yescollision) return;
-			qsize=1;
-			queue[0]=i*HEIGHT+j;
-			save[i][j]=-save[i][j];
-			for(int k=0;k<qsize;++k){
-				for(int v=0;v<4;++v){
-					int cx=queue[k]/HEIGHT+"1210"[v]-'1', cy=queue[k]%HEIGHT+"0121"[v]-'1';
-					if(cx<0||cy<0||cx>=HEIGHT||cy>=WIDTH||save[cx][cy]!=save[i][j]) continue;
-					save[cx][cy]=-save[cx][cy];
-					queue[qsize++]=cx*HEIGHT+cy;
-				}
-			}SummonBlock();
-			return;
-		}
-	}
+    int visited[HEIGHT][WIDTH]={0,};
+    for(int i=0;i<HEIGHT;++i){
+        for(int j=0;j<WIDTH;++j){
+            visited[i][j]=1;
+            if(save[i][j]>=0) continue;
+            int queue[HEIGHT*WIDTH]={0,},qsize=1,yescollision=0;
+            queue[0]=i*WIDTH+j;
+            for(int k=0;k<qsize;++k){
+                yescollision=yescollision|(queue[k]/WIDTH==HEIGHT-1);
+                for(int v=0;v<4;++v){
+                    int cx=queue[k]/WIDTH+"1210"[v]-'1', cy=queue[k]%WIDTH+"0121"[v]-'1';
+                    if(cx<0||cy<0||cx>=HEIGHT||cy>=WIDTH) continue;
+                    if(cx-1==queue[k]/WIDTH&&save[cx][cy]>0) yescollision=1;
+                    if(save[cx][cy]!=save[i][j]||visited[cx][cy]) continue;
+                    visited[cx][cy]=1;
+                    queue[qsize++]=cx*WIDTH+cy;
+                }
+            }if(!yescollision) return;
+            qsize=1;
+            queue[0]=i*WIDTH+j;
+            save[i][j]=-save[i][j];
+            for(int k=0;k<qsize;++k){
+                for(int v=0;v<4;++v){
+                    int cx=queue[k]/WIDTH+"1210"[v]-'1', cy=queue[k]%WIDTH+"0121"[v]-'1';
+                    if(cx<0||cy<0||cx>=HEIGHT||cy>=WIDTH||save[cx][cy]!=-save[i][j]) continue;
+                    save[cx][cy]=-save[cx][cy];
+                    queue[qsize++]=cx*WIDTH+cy;
+                }
+            }SummonBlock();
+            return;
+        }
+    }
+}
+
+
+
+void Summon(char block[][4][4], int idx){
+    int x = WIDTH / 2 - 18;
+    int y = 0;
+    rotateNum = 0;
+    int color = rand() % 4 + 1;
+    currentBlockColor = color;
+    blockIdx[0] = x;
+    blockIdx[1] = y;
+    for (int i = 0; i < 9 * 4; i++){
+        for (int j = 0; j < 9 * 4; j++){
+            if (block[idx][i / 9][j / 9] == 1 && save[y + i][x + j] != 0){
+                system("cls");
+                ended = 1;
+                COORD pos = {0, 0};
+                SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), pos);
+                printf("  ________                        ________                     \n");
+                printf(" /  _____/_____    _____   ____   \\_____  \\___  __ ___________ \n");
+                printf("/   \\  ___\\__  \\  /     \\_/ __ \\   /   |   \\  \\/ // __ \\_  __ \\\n");
+                printf("\\    \\_\\  \\/ __ \\|  Y Y  \\  ___/  /    |    \\   /\\  ___/|  | \\/\n");
+                printf(" \\______  (____  /__|_|  /\\___  > \\_______  /\\_/  \\___  >__|   \n");
+                printf("        \\/     \\/      \\/     \\/          \\/          \\/       ");
+            }
+            else if (block[idx][i / 9][j / 9] == 1) save[y + i][x + j] = block[idx][i / 9][j / 9] * color * -1;
+        }
+    }
+}
+
+// void Rotate()
+
+void SummonBlock(){
+    switch (rand() % 7){
+        case 0:
+            currentBlock = IBlock;
+            totRotateNum = 2;
+            Summon(IBlock, 0);
+            break;
+        case 1:
+            currentBlock = OBlock;
+            totRotateNum = 1;
+            Summon(OBlock, 0);
+            break;
+        case 2:
+            currentBlock = TBlock;
+            totRotateNum = 4;
+            Summon(TBlock, 0);
+            break;
+        case 3:
+            currentBlock = SBlock;
+            totRotateNum = 2;
+            Summon(SBlock, 0);
+            break;
+        case 4:
+            currentBlock = ZBlock;
+            totRotateNum = 2;
+            Summon(ZBlock, 0);
+            break;
+        case 5:
+            currentBlock = LBlock;
+            totRotateNum = 4;
+            Summon(LBlock, 0);
+            break;
+        default:
+            currentBlock = JBlock;
+            totRotateNum = 4;
+            Summon(JBlock, 0);
+            break;
+    }
+}
+
+void Rotate(){
+    int flag = 1;
+    rotateNum++;
+    if (rotateNum >= totRotateNum) rotateNum = 0;
+    int x = blockIdx[0], y = blockIdx[1];
+    int tmp = 1;
+    while (tmp){
+        tmp = 0;
+        int k = 0;
+        for (int i = 0; i < 9 * 4; i++)
+        for (int j = 0; j < 9 * 4; j++){
+            if (k) break;
+            if (j + x >= WIDTH && currentBlock[rotateNum][i / 9][j / 9] == 1){
+                // blockIdx[0] --;
+                x --;
+                tmp = 1;
+                k = 1;
+            }
+            if (j + x < 0 && currentBlock[rotateNum][i / 9][j / 9] == 1){
+                // blockIdx[0] ++;
+                x ++;
+                tmp = 1;
+                k = 1;
+            }
+            if (i + y >= HEIGHT && currentBlock[rotateNum][i / 9][j / 9] == 1){
+                y --;
+                tmp = 1;
+                k = 1;
+            }
+            if (i + y < 0 && currentBlock[rotateNum][i / 9][j / 9] == 1){
+                y ++;
+                tmp = 1;
+                k = 1;
+            }
+        }
+    }
+    for (int i = 0; i < 9 * 4; i++)
+    for (int j = 0; j < 9 * 4; j++)
+    if (save[i + y][j + x] > 0 && currentBlock[rotateNum][i / 9][j / 9] == 1){
+        flag = 0;
+        break;
+    }
+    if (flag){
+        for (int i = 0; i < HEIGHT; i++)
+        for (int j = 0; j < WIDTH; j++)
+        if (save[i][j] < 0) save[i][j] = 0;
+        for (int i = 0; i < 9 * 4; i++)
+        for (int j = 0; j < 9 * 4; j++){
+            if (currentBlock[rotateNum][i / 9][j / 9] == 1) save[i + y][j + x] = -currentBlockColor;
+        }
+        blockIdx[0] = x;
+        blockIdx[1] = y;
+    }
 }
