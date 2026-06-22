@@ -270,16 +270,50 @@ void Setup(){
 // }
 
 void MoveSand(){
+	/* 
+	# Why MoveSand Works Asymmetrically
+	the second for loop sweeps the line from left to right
+	particles on the left that has no particle under them moves downward
+	if a particle that has to move leftward, only that single particle moves leftward
+	which results in jamming
+	whereas paritcles moving rightward have no jamming at all
+	
+	moving left can be illustrated as this:
+	(O is for sand particles to move, X is blank, M is rigid sand)
+	(the code is currently sweeping at the top line)
+	0		1		2		3		j index
+	XOOO	XXOO	XXXO	XXXO
+	XXXO -> XOXO -> XOOO -> XOOO
+	XMMM	XMMM	XMMM	XMMM
+	(particle visited in the 3th index is stuck, cannot move leftward) 
+	
+	where moving right can be illustrated as this: 
+	0		1		2		3		j index
+	XOOO	XXOO	XXXO	XXXO
+	XOXX -> XOOX -> XOOO -> XOOO
+	MMMX	MMMX	MMMX	MMMX
+	
+	thus, sweeping in one direction results in jamming for either moving leftward or rightward
+	
+	# How I Fixed This
+	Fundamentally, premature move of downward results in jamming.
+	I moved the code for moving downward to remove underlying cause.
+	Then I could insert another for loop for moving particles leftward.
+	This loop can let particles that should move leftward move simultaneously, getting rid of jamming.
+	However, the two move function functions in a different sense, and can seem awkward.
+	Whatever
+	*/
     for (int i = HEIGHT - 2; i >= 0; i--){
         for (int j = 0; j < WIDTH; j++){
             if (save[i][j] != 0){
-                if (save[i + 1][j] == 0){
-                    save[i + 1][j] = save[i][j];
-                    save[i][j] = 0;
-                }else{
+                if (save[i + 1][j] != 0){
                     if(j > 0 && save[i + 1][j - 1] == 0){
-                        save[i + 1][j - 1] = save[i][j];
-                        save[i][j] = 0;
+                    	int v = j;
+                    	for(; v > 0 && save[i][v] != 0 && save[i + 1][v - 1] == 0 && save[i + 1][v - 1] != 0; --v);
+						for(; v <= j; ++v){
+                    		save[i + 1][v - 1] = save[i][v];
+                    		save[i][v] = 0;
+						}
                     }else if(j < WIDTH - 1 && save[i + 1][j + 1] == 0){
                         save[i + 1][j + 1] = save[i][j];
                         save[i][j] = 0;
@@ -287,19 +321,15 @@ void MoveSand(){
                 }
             }
         }
-        for (int j = WIDTH - 1; j >= 0; j --){
-            if (save[i][j] != 0 && save[i + 1][j] != 0){
-                if (j < WIDTH - 1 && save[i + 1][j + 1] == 0){
-                    save[i + 1][j + 1] = save[i][j];
-                    save[i][j] = 0;
-                } else if (j > 0 && save[i + 1][j - 1] == 0){
-                    save[i + 1][j - 1] = save[i][j];
+        for (int j = 0; j < WIDTH; j++){
+            if (save[i][j] != 0){
+                if (save[i + 1][j] == 0){
+                    save[i + 1][j] = save[i][j];
                     save[i][j] = 0;
                 }
             }
         }
-    }
-    blockIdx[1] += 1;
+    }blockIdx[1] += 1;
 }
 
 void DestroySand(){
