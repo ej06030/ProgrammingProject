@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <conio.h>
 #include <windows.h>
-#include <time.h>
 #define WIDTH 90
 #define HEIGHT 150
 
@@ -242,7 +241,7 @@ void Draw(){
                 if(save[i][j] == 0) 
             		printf(" ");
             	else
-            		printf("O");
+            		printf("%c","&$#%%"[(i+j)%4]);
                 //printf("%s", save[i][j] == 0 ? " " : "■");
                 //printf("%d", save[i][j]);
                 lastSave[i][j] = save[i][j];
@@ -253,8 +252,7 @@ void Draw(){
 
 
 void Setup(){
-    srand(time(NULL));
-    // system("mode con cols=100 lines=160 | title test");
+    system("mode con cols=100 lines=160 | title test");
     for (int i = 0; i < HEIGHT; i++){
         for (int j = 0; j < WIDTH; j++){
             save[i][j] = 0;
@@ -266,7 +264,7 @@ void Setup(){
             if(save[i][j] == 0) 
             	printf(" ");
             else
-            	printf("O");
+            	printf("%c","&$#%%"[(i+j)%4]);
             //printf("%s", save[i][j] == 0?" ":"ㅁ");
             //printf("%d", save[i][j]);
         }
