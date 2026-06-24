@@ -10,9 +10,11 @@ void SummonBlock();
 void MoveSand();
 void Draw();
 void DestroySand();
+void SwitchBlock();
 void CheckCollision();
 void Summon(char[][4][4], int);
 void Rotate();
+void SaveBlock();
 
 
 int save[HEIGHT][WIDTH];
@@ -116,6 +118,13 @@ char JBlock[4][4][4] =
  {0, 0, 0, 0}}};
 
 char (*currentBlock)[4][4];
+
+
+char (*savedBlock)[4][4];
+int savedColor;
+int isSaved = 0;
+int canSave = 1;
+
 int rotateNum;
 int totRotateNum;
 int currentBlockColor;
@@ -196,6 +205,7 @@ void GetInput(){
         }
         else if (key == 32) Rotate();
         else if (key == 80) fastFall = 1;
+        else if (key == 99) SaveBlock();
     }
 }
 
@@ -398,6 +408,7 @@ void CheckCollision(){
                     queue[qsize++]=cx*WIDTH+cy;
                 }
             }SummonBlock();
+            canSave = 1;
             return;
         }
     }
@@ -409,8 +420,8 @@ void Summon(char block[][4][4], int idx){
     int x = WIDTH / 2 - 18;
     int y = 0;
     rotateNum = 0;
-    int color = rand() % 4 + 1;
-    currentBlockColor = color;
+    // int color = rand() % 4 + 1;
+    // currentBlockColor = color;
     blockIdx[0] = x;
     blockIdx[1] = y;
     for (int i = 0; i < 9 * 4; i++){
@@ -427,7 +438,7 @@ void Summon(char block[][4][4], int idx){
                 printf(" \\______  (____  /__|_|  /\\___  > \\_______  /\\_/  \\___  >__|   \n");
                 printf("        \\/     \\/      \\/     \\/          \\/          \\/       ");
             }
-            else if (block[idx][i / 9][j / 9] == 1) save[y + i][x + j] = block[idx][i / 9][j / 9] * color * -1;
+            else if (block[idx][i / 9][j / 9] == 1) save[y + i][x + j] = block[idx][i / 9][j / 9] * currentBlockColor * -1;
         }
     }
 }
@@ -435,6 +446,7 @@ void Summon(char block[][4][4], int idx){
 // void Rotate()
 
 void SummonBlock(){
+    currentBlockColor = rand() % 4 + 1;
     switch (rand() % 7){
         case 0:
             currentBlock = IBlock;
@@ -526,5 +538,55 @@ void Rotate(){
         }
         blockIdx[0] = x;
         blockIdx[1] = y;
+    }
+}
+
+
+void SaveBlock(){
+    if (canSave){
+        canSave = 0;
+        for (int i = 0; i < 9 * 4; i++)
+        for (int j = 0; j < 9 * 4; j++)
+        if (save[blockIdx[1] + i][blockIdx[0] + j] < 0) save[blockIdx[1] + i][blockIdx[0] + j] = 0;
+        if (isSaved){
+            SwitchBlock();
+        }
+        else{
+            savedColor = currentBlockColor;
+            savedBlock = currentBlock;
+            isSaved = 1;
+            SummonBlock();
+        }
+    }
+}
+
+void SwitchBlock(){
+    char (*tmp)[4][4] = savedBlock;
+    savedBlock = currentBlock;
+    currentBlock = tmp;
+    int tmptmp = currentBlockColor;
+    currentBlockColor = savedColor;
+    savedColor = tmptmp;
+    int x = WIDTH / 2 - 18;
+    int y = 0;
+    rotateNum = 0;
+    blockIdx[0] = x;
+    blockIdx[1] = y;
+    for (int i = 0; i < 9 * 4; i++){
+        for (int j = 0; j < 9 * 4; j++){
+            if (currentBlock[rotateNum][i / 9][j / 9] == 1 && save[y + i][x + j] != 0){
+                system("cls");
+                ended = 1;
+                COORD pos = {0, 0};
+                SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), pos);
+                printf("  ________                        ________                     \n");
+                printf(" /  _____/_____    _____   ____   \\_____  \\___  __ ___________ \n");
+                printf("/   \\  ___\\__  \\  /     \\_/ __ \\   /   |   \\  \\/ // __ \\_  __ \\\n");
+                printf("\\    \\_\\  \\/ __ \\|  Y Y  \\  ___/  /    |    \\   /\\  ___/|  | \\/\n");
+                printf(" \\______  (____  /__|_|  /\\___  > \\_______  /\\_/  \\___  >__|   \n");
+                printf("        \\/     \\/      \\/     \\/          \\/          \\/       ");
+            }
+            else if (currentBlock[rotateNum][i / 9][j / 9] == 1) save[y + i][x + j] = currentBlock[rotateNum][i / 9][j / 9] * currentBlockColor * -1;
+        }
     }
 }
