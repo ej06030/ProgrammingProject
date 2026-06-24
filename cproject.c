@@ -124,6 +124,7 @@ char (*savedBlock)[4][4];
 int savedColor;
 int isSaved = 0;
 int canSave = 1;
+int savedRotateNum;
 
 int rotateNum;
 int totRotateNum;
@@ -553,6 +554,7 @@ void SaveBlock(){
         }
         else{
             savedColor = currentBlockColor;
+            savedRotateNum = totRotateNum;
             savedBlock = currentBlock;
             isSaved = 1;
             SummonBlock();
@@ -570,6 +572,9 @@ void SwitchBlock(){
     int x = WIDTH / 2 - 18;
     int y = 0;
     rotateNum = 0;
+    int ttmp = savedRotateNum;
+    savedRotateNum = totRotateNum;
+    totRotateNum = ttmp;
     blockIdx[0] = x;
     blockIdx[1] = y;
     for (int i = 0; i < 9 * 4; i++){
