@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <conio.h>
 #include <windows.h>
+#include <time.h>
 #define WIDTH 90
 #define HEIGHT 150
 
@@ -252,7 +253,8 @@ void Draw(){
 
 
 void Setup(){
-    system("mode con cols=100 lines=160 | title test");
+    srand(time(NULL));
+    // system("mode con cols=100 lines=160 | title test");
     for (int i = 0; i < HEIGHT; i++){
         for (int j = 0; j < WIDTH; j++){
             save[i][j] = 0;
