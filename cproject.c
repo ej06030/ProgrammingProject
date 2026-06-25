@@ -15,6 +15,8 @@ void SwitchBlock();
 void CheckCollision();
 void Summon(char[][4][4], int);
 void Rotate();
+void UpdateNext();
+void printText(int text, int x, int y);
 void SaveBlock();
 
 
@@ -120,6 +122,11 @@ char JBlock[4][4][4] =
 
 char (*currentBlock)[4][4];
 
+//Color, Type
+int nextBlockInfo[2] = {};
+
+int score = 0;
+
 
 char (*savedBlock)[4][4];
 int savedColor;
@@ -138,9 +145,237 @@ int fastFall = 0;
 
 int ended = 0;
 
+void gotoxy(int x, int y){
+	COORD pos = {x,y};
+    SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), pos);
+}
+
+char FONT[16][7][100] = {
+	{
+		"  ___  ",
+		" / _ \\ ",
+		"| | | |",
+		"| | | |",
+		"| |_| |",
+		" \\___/ "
+	},
+	{
+		"  __ ",
+		" /_ |",
+		"  | |",
+		"  | |",
+		"  | |",
+		"  |_|"
+	},
+	{
+		" ___   ",
+		"|__ \\ ",
+		"   ) | ",
+		"  / /  ",
+		" / /_  ",
+		"|____| "
+	},
+	{	
+		" ____  ",
+		"|___ \\ ",
+		"  __) |",
+		" |__ < ",
+		" ___) |",
+		"|____/ "
+	},
+	{	
+		" _  _   ",
+		"| || |  ",
+		"| || |_ ",
+		"|__   _|",
+		"   | |  ",
+		"   |_|  "
+	},
+	{
+		" _____ ",
+		"| ____|",
+		"| |__  ",
+		"|___ \\",
+		" ___) |",
+		"|____/ "
+	},
+	{
+		"   __  ",
+		"  / /  ",
+		" / /_  ",
+		"| '_ \\ ",
+		"| (_) |",
+		" \\___/ "
+	},	
+	{
+		" ______ ",
+		"|____  |",
+		"    / / ",
+		"   / /  ",
+		"  / /   ",
+		" /_/    "
+	},
+	{
+		"  ___  ",
+		" / _ \\ ",
+		"| (_) |",
+		" > _ < ",
+		"| (_) |",
+		" \\___/ "
+	},
+	{	
+		"  ___  ",
+		" / _ \\ ",
+		"| (_) |",
+		" \\__, |",
+		"   / / ",
+		"  /_/  "
+	},
+	
+	{ 
+		" _   _ ________   _________ ", 
+		"| \\ | |  ____\\ \\ / /__   __|", 
+		"|  \\| | |__   \\ V /   | |   ",
+		"| . ` |  __|   > <    | |   ", 
+		"| |\\  | |____ / . \\   | |   ", 
+		"|_| \\_|______/_/ \\_\\  |_|   "
+	},
+	{
+		" ____          _____ ",
+		"|  _ \\   /\\   / ____|",
+		"| |_) | /  \\ | |  __ ",
+		"|  _ < / /\\ \\| | |_ |",
+		"| |_) / ____ \\ |__| |",
+		"|____/_/    \\_\\_____|"
+	},
+	{
+		"  _____  _____ ____  _____  ______ ",
+		" / ____|/ ____/ __ \\|  __ \\|  ____|",
+		"| (___ | |   | |  | | |__) | |__   ",
+		" \\___ \\| |   | |  | |  _  /|  __|  ",
+		" ____) | |___| |__| | | \\ \\| |____ ",
+		"|_____/ \\_____\\____/|_|  \\_\\______|"
+	},
+	{
+		" _______ _____ __  __ ______ ",
+		"|__   __|_   _|  \\/  |  ____|",
+		"   | |    | | | \\  / | |__   ",
+		"   | |    | | | |\\/| |  __|  ",
+		"   | |   _| |_| |  | | |____ ",
+		"   |_|  |_____|_|  |_|______|"
+	},
+	{
+		" _      _____ _   _ ______  _____ ",
+		"| |    |_   _| \\ | |  ____|/ ____|",
+		"| |      | | |  \\| | |__  | (___  ",
+		"| |      | | | . ` |  __|  \\___ \\ ",
+		"| |____ _| |_| |\\  | |____ ____) |",
+		"|______|_____|_| \\_|______|_____/ "
+		
+	},
+	{
+		"   ",
+		" _ ",
+		"(_)",
+		"   ",
+		"   ",
+		"(_)",
+		"    "
+	}
+};
+
+
+int lt_pos[2] = {111, 0};
+
+void printBoard() {
+	
+	gotoxy(95,0);
+	for(int i = 0; i <= 159; i++) {
+		
+		gotoxy(95,0+i);
+		if(i >= 150) {
+			printf("¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á");
+		}
+		else {
+			printf("¡á¡á¡á¡á¡á¡á¡á¡á");
+			for(int j = 0; j < 5; j++)
+				printf("                  ");
+			printf("¡á¡á¡á¡á¡á¡á¡á¡á");
+		}
+
+	}
+    // NEXT, 136 - 36 = 100¹øÂ°ºÎÅÍ, 54 - 36 = 18¹øÂ°ºÎÅÍ
+    //233, 36
+		printText(10,225,30);
+	gotoxy(219,33);
+	printf("¡á¡á¡á");
+	gotoxy(250,33);
+	printf("¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á");	
+	for(int i = 0; i < 42; i++) {
+		gotoxy(219,34+i);
+		printf("¡á");
+		gotoxy(292,34+i);
+		printf("¡á");
+	}
+	gotoxy(219,75);
+	printf("¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á");	
+	// BAG, 35¹øÂ°ºÎÅÍ, 36¹øÂ°ºÎÅÍ
+	printText(11,22,30);
+	gotoxy(16,33);
+	printf("¡á¡á¡á");
+	gotoxy(41,33);
+	printf("¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á");	
+	for(int i = 0; i < 42; i++) {
+		gotoxy(16,34+i);
+		printf("¡á");
+		gotoxy(89,34+i);
+		printf("¡á");
+	}
+	gotoxy(16,75);
+	printf("¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á¡á");
+	printText(12,225, 90);
+	printText(13,225, 120);
+	printText(14,225, 150);
+	gotoxy(225,600);
+
+	for(int i = 0; i < 22; i++) {
+		gotoxy(310,i+89);
+		printf("¡á");
+	}
+	for(int i = 0; i < 12; i++) {
+		gotoxy(225, i + 100);
+		printf("¡á");
+	}
+
+	
+	
+}
+void printNums(int score, int x, int y) {
+	int cnt = 0;
+	if(score == 0) {
+		printText(0,x,y);
+		return;
+	}
+	while(score >= 1) {
+		printText(score % 10, x - cnt * 6, y);
+		score /= 10;
+		cnt += 1;
+	}
+}
+
+void printText(int text, int x, int y) {
+	gotoxy(x, y);
+	for(int i = 0; i < 6; i++) {
+		printf("%s", FONT[text][i]);
+		gotoxy(x,y+i+1);
+	}
+}
+
+
 int main(){
     Setup();
     SummonBlock();
+    UpdateNext();
     while (!ended){
         fastFall = 0;
         // SummonBlock();
@@ -153,8 +388,7 @@ int main(){
         if (ended) break;
 		DestroySand();
         Draw();
-        if (!fastFall) Sleep(10);
-        else fallCounter = 1;
+       
         fallCounter --;
     }
     while (1){
@@ -213,12 +447,21 @@ void GetInput(){
 
 
 void Draw(){
+    clock_t a = clock();
+    float gameTime = (float)a / CLOCKS_PER_SEC;
+    int gameMin = (int)gameTime / 60;
+    int gameSec = (int)gameTime % 60;
+	printNums(score,300,105); // Á¡¼ö 
+	printNums(gameMin,283,135); //ºÐ 
+	printText(15,290,135); //: Ãâ·° 
+	printNums(gameSec,300,135); //ÃÊ 
+
     for (int i = 0; i < HEIGHT; i++){
         for (int j = 0; j < WIDTH; j++){
             if (lastSave[i][j] != save[i][j]){
                 COORD pos;
-                pos.X = j;
-                pos.Y = i;
+                pos.X = lt_pos[0] + j;
+                pos.Y = lt_pos[1] + i;
                 SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), pos);
                 // 12, 9, 10, 14
                 switch (save[i][j]){
@@ -242,8 +485,8 @@ void Draw(){
                 if(save[i][j] == 0) 
             		printf(" ");
             	else
-            		printf("%c","&$#%%"[(i+j)%4]);
-                //printf("%s", save[i][j] == 0 ? " " : "â– ");
+            		printf("O");
+                //printf("%s", save[i][j] == 0 ? " " : "¡á");
                 //printf("%d", save[i][j]);
                 lastSave[i][j] = save[i][j];
             }
@@ -252,8 +495,19 @@ void Draw(){
 }
 
 
+
 void Setup(){
-    system("mode con cols=100 lines=160 | title test");
+    nextBlockInfo[0] = rand() % 4 + 1;
+    nextBlockInfo[1] = rand() % 7 + 1;
+	printBoard();
+    clock_t a = clock();
+    float gameTime = (float)a / CLOCKS_PER_SEC;
+    int gameMin = (int)gameTime / 60;
+    int gameSec = (int)gameTime % 60;
+	printNums(0,300,105); // Á¡¼ö 
+	printNums(gameMin,283,135); //ºÐ 
+	printText(15,290,135); //: Ãâ·° 
+	printNums(gameSec,300,135); //ÃÊ 
     srand(time(NULL));
     // system("mode con cols=100 lines=160 | title test");
     for (int i = 0; i < HEIGHT; i++){
@@ -261,25 +515,25 @@ void Setup(){
             save[i][j] = 0;
             lastSave[i][j] = 0;
             COORD pos;
-            pos.X = j;
-            pos.Y = i;
+            pos.X = j + lt_pos[0];
+            pos.Y = i + lt_pos[1];
             SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), pos);
             if(save[i][j] == 0) 
             	printf(" ");
             else
-            	printf("%c","&$#%%"[(i+j)%4]);
-            //printf("%s", save[i][j] == 0?" ":"ã…");
+            	printf("O");
+            //printf("%s", save[i][j] == 0?" ":"¤±");
             //printf("%d", save[i][j]);
         }
         COORD pos;
-        pos.X = WIDTH;
-        pos.Y = i;
+        pos.X = lt_pos[0] + WIDTH;
+        pos.Y = lt_pos[1] + i;
         SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), pos);
         printf("\n");
     }
 }
 
-// void SummonBlock(){ // 0: ë¹ˆ ê³µê°„ 1: ì¡°ìž‘í•  ìˆ˜ ì—†ëŠ” í”½ì…€ // -1ì¡°ìž‘ ê°€ëŠ¥í•œ í”½ì…€  
+// void SummonBlock(){ // 0: ºó °ø°£ 1: Á¶ÀÛÇÒ ¼ö ¾ø´Â ÇÈ¼¿ // -1Á¶ÀÛ °¡´ÉÇÑ ÇÈ¼¿  
 //     save[0][WIDTH/2] = -1;
 // }
 
@@ -371,6 +625,7 @@ void DestroySand(){
 		visited[l][0]=0;
 		for(int i=0;i<qsize;++i){
 			// insert Score UP function here
+            score += 100;
 			save[queue[i]/WIDTH][queue[i]%WIDTH]=0;
 			for(int j=0;j<4;++j){
 				int cx=queue[i]/WIDTH+"1210"[j]-'1', cy=queue[i]%WIDTH+"0121"[j]-'1';
@@ -412,6 +667,7 @@ void CheckCollision(){
                     queue[qsize++]=cx*WIDTH+cy;
                 }
             }SummonBlock();
+            UpdateNext();
             canSave = 1;
             return;
         }
@@ -450,8 +706,9 @@ void Summon(char block[][4][4], int idx){
 // void Rotate()
 
 void SummonBlock(){
-    currentBlockColor = rand() % 4 + 1;
-    switch (rand() % 7){
+    currentBlockColor = nextBlockInfo[0];
+    // currentBlockColor = rand() % 4 + 1;
+    switch (nextBlockInfo[1] - 1){
         case 0:
             currentBlock = IBlock;
             totRotateNum = 2;
@@ -488,6 +745,8 @@ void SummonBlock(){
             Summon(JBlock, 0);
             break;
     }
+    nextBlockInfo[0] = rand() % 4 + 1;
+    nextBlockInfo[1] = rand() % 7 + 1;
 }
 
 void Rotate(){
@@ -562,6 +821,36 @@ void SaveBlock(){
             isSaved = 1;
             SummonBlock();
         }
+        UpdateNext();
+        gotoxy(200, 36);
+        if (isSaved){
+            switch (savedColor){
+                case 1:
+                case -1:
+                    SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 12);
+                    break;
+                case -2:
+                case 2:
+                    SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 9);
+                    break;
+                case -3:
+                case 3:
+                    SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 10);
+                    break;
+                case -4:
+                case 4:
+                    SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 14);
+                    break;
+            }
+
+            for (int i = 0; i < 9 * 4; i++){
+                for (int j = 0; j < 9 * 4; j++){
+                    printf("%c", savedBlock[0][i / 9][j / 9] > 0 ? 'O' : ' ');
+                }
+                gotoxy(35, 36 + i + 1);
+            }
+            SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 15);
+        }
     }
 }
 
@@ -596,5 +885,58 @@ void SwitchBlock(){
             }
             else if (currentBlock[rotateNum][i / 9][j / 9] == 1) save[y + i][x + j] = currentBlock[rotateNum][i / 9][j / 9] * currentBlockColor * -1;
         }
+    }
+}
+
+void UpdateNext(){
+    gotoxy(223, 36);
+    switch (nextBlockInfo[0]){
+        case 1:
+        case -1:
+            SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 12);
+            break;
+        case -2:
+        case 2:
+            SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 9);
+            break;
+        case -3:
+        case 3:
+            SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 10);
+            break;
+        case -4:
+        case 4:
+            SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 14);
+            break;
+    }
+    char (*tmptmptmp)[4][4];
+    switch (nextBlockInfo[1]){
+        //iotszlj
+        case 1:
+            tmptmptmp = IBlock;
+            break;
+        case 2:
+            tmptmptmp = OBlock;
+            break;
+        case 3:
+            tmptmptmp = TBlock;
+            break;
+        case 4:
+            tmptmptmp = SBlock;
+            break;
+        case 5:
+            tmptmptmp = ZBlock;
+            break;
+        case 6:
+            tmptmptmp = LBlock;
+            break;
+        case 7:
+            tmptmptmp = JBlock;
+            break;
+    }
+    for (int i = 0; i < 9 * 4; i++){
+        for (int j = 0; j < 9 * 4; j++){
+            printf("%c", tmptmptmp[0][i / 9][j / 9]>0?'O':' ');
+        }
+        gotoxy(235, 36 + i + 1);
     }
 }
