@@ -5,19 +5,19 @@
 #define WIDTH 90
 #define HEIGHT 150
 
-void GetInput();
-void Setup();
-void SummonBlock();
-void MoveSand();
-void Draw();
-void DestroySand();
-void SwitchBlock();
-void CheckCollision();
-void Summon(char[][4][4], int);
-void Rotate();
-void UpdateNext();
-void printText(int text, int x, int y);
-void SaveBlock();
+void GetInput(); // 입력을 받고, 입력에 맞는 함수를 실행합니다. 
+void Setup(); // 처음 UI를 프린트합니다. 
+void SummonBlock(); // 블록을 생성합니다. 
+void MoveSand(); // 모래 물리 함수입니다. 
+void Draw(); // 바뀐 모래를 그립니다. 
+void DestroySand(); // 가로로 연속하는 모래를 파괴합니다. 
+void SwitchBlock(); // 저장된 모래와 현재 모래 블록을 바꿉니다. 
+void CheckCollision(); // 모래 블록이 충돌했는지 확인하고, 다음 모래 블록을 생성합니다. 
+void Summon(char[][4][4], int); // 모래 생성 헬퍼 함수입니다. 
+void Rotate(); // 모래 회전 함수입니다. 
+void UpdateNext(); // 다음 모래 UI를 업데이트합니다. 
+void printText(int text, int x, int y); // UI 헬퍼 함수입니다. 
+void SaveBlock(); // 블록 저장 함수입니다. 
 
 
 int save[HEIGHT][WIDTH];
@@ -388,7 +388,7 @@ int main(){
         if (ended) break;
 		DestroySand();
         Draw();
-       
+       	//if (!fastFall) Sleep(20);
         fallCounter --;
     }
     while (1){
